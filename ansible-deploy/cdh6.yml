@@ -1,0 +1,73 @@
+---
+# master control
+- hosts: cdh5-all
+  vars:
+   - software_files_path: "/opt/software"
+   - software_install_path: "/usr/local"  
+   - cdh5_version: "6.2.0"
+   - cdh6_cloudera_repos: "http://10.0.0.10"
+   - cdh6_mysql_repos: "http://10.0.0.10"
+   - cdh5_cm_daemons: "cloudera-manager-daemons-6.2.0-968826.el7.x86_64.rpm"
+   - cdh5_cm_agent: "cloudera-manager-agent-6.2.0-968826.el7.x86_64.rpm"
+   - cdh5_jdk: "oracle-j2sdk1.8-1.8.0+update181-1.x86_64.rpm"
+   - cdh5_java_home: "/usr/java/jdk1.8.0_181-cloudera"
+   - jdbc_version: "5.1.46"
+   - cdh5_parcels_cdh: 'CDH-6.2.0-1.cdh6.2.0.p0.967373-el7.parcel'
+   - cdh5_parcels_cdh_sha: 'CDH-6.2.0-1.cdh6.2.0.p0.967373-el7.parcel.sha1'
+   - mysql_password: 'Ncrp8CUCKWfT#SjiB'
+   - ipnames:
+      '10.0.0.9': 'forCDHHost'
+      '10.0.0.6': 'forCDHHost2'
+      '10.0.0.4': 'forCDHHost3'
+      '10.0.0.7': 'forCDHHost4'
+      '10.0.0.5': 'forCDHHost5'
+      
+  roles:
+   - { role: cdh5-pre }
+
+- hosts: cdh5-server
+  vars:
+   - cdh5_version: "6.2.0"
+   - cdh5_parcels_cdh: 'CDH-6.2.0-1.cdh6.2.0.p0.967373-el7.parcel'
+   - cdh5_parcels_cdh_sha: 'CDH-6.2.0-1.cdh6.2.0.p0.967373-el7.parcel.sha1'
+   - cdh6_cloudera_repos: "http://118.184.218.99"
+   - cdh5_cm_server: "cloudera-manager-server-6.2.0-968826.el7.x86_64.rpm"
+   - cdh5_cm_daemons: "cloudera-manager-daemons-6.2.0-968826.el7.x86_64.rpm"
+   - cdh5_cm_agent: "cloudera-manager-agent-6.2.0-968826.el7.x86_64.rpm"
+   - cdh5_java_home: "/usr/java/jdk1.8-1.8.0-cloudera"
+   - jdbc_version: "5.1.46"
+   - cmake_version: "3.6.2"
+   - software_files_path: "/opt/software"
+   - software_install_path: "/usr/local"  
+   - cdh6_cloudera_repos: "http://10.0.0.10"
+   - cdh6_mysql_repos: "http://10.0.0.10"
+   - mysql57_version: "5.7.20"
+   - mysql_host: 'forCDHHost'
+   - mysql_user: root
+   - mysql_password: 'Ncrp8CUCKWfT#SjiB'
+   - mysql_binlog_format: 'MiXED'
+   - cdh5_server_host: 'forCDHHost'
+   
+  roles: 
+   - { role: mysql57 }
+   - { role: cdh5-server }
+
+- hosts: cdh5-agent
+  vars:
+   - cdh5_server_host: 'forCDHHost'
+   - cdh5_version: "6.2.0"
+   - cdh5_parcels_cdh: 'CDH-6.2.0-1.cdh6.2.0.p0.967373-el7.parcel'
+   - cdh5_parcels_cdh_sha: 'CDH-6.2.0-1.cdh6.2.0.p0.967373-el7.parcel.sha1'
+   - cdh6_cloudera_repos: "http://118.184.218.99"
+   - cdh5_cm_server: "cloudera-manager-server-6.2.0-968826.el7.x86_64.rpm"
+   - cdh5_cm_daemons: "cloudera-manager-daemons-6.2.0-968826.el7.x86_64.rpm"
+   - cdh5_cm_agent: "cloudera-manager-agent-6.2.0-968826.el7.x86_64.rpm"
+   - cdh5_java_home: "/usr/java/jdk1.8.0_181-cloudera"
+   - jdbc_version: "5.1.46"
+   - cdh6_cloudera_repos: "http://10.0.0.10"
+   - cdh6_mysql_repos: "http://10.0.0.10"
+   - cmake_version: "3.6.2"
+   - software_files_path: "/opt/software"
+   - software_install_path: "/usr/local"  
+  roles:
+   - { role: cdh5-agent }
