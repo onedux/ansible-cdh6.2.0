@@ -1,0 +1,98 @@
+---
+# author: lework
+
+- name: install | Check if Mysql file is already configured.
+  stat: path={{ mysql57_file_path }}
+  connection: local
+  register: mysql57_file_result
+
+- name: install | Create software files path.
+  file: path={{ software_files_path }} state=directory
+  connection: local
+  when: not mysql57_file_result.stat.exists
+
+- name: install | Download Mysql file.
+  get_url: url={{ mysql57_file_url }} dest={{ software_files_path }}/
+  connection: local
+  when: not mysql57_file_result.stat.exists and mysql57_install_from_source
+
+- name: install | Confirm the existence of the installation directory.
+  file: path={{ software_install_path }} state=directory
+  
+- name: install | Not found Mysql bin file.
+  fail: msg={{ mysql57_file_path }}
+  when: not mysql57_file_result.stat.exists and not mysql57_install_from_source
+  
+#- name: install | Check cmake version is OK
+#  shell: cmake --version
+#  register: cmake_version_result  
+  
+
+  
+#- name: install new cmake3.6 
+#  shell: rm -rf /tmp/cmaketmp && mkdir /tmp/cmaketmp/ && cd  /tmp/cmaketmp/  && wget  {{ cdh6_cmake_repos }}/other-repos/cmake{{ cmake_version }}/cmake-{{ cmake_version }}.tar.gz   && tar xvf cmake-{{ cmake_version }}.tar.gz && cd cmake-{{ cmake_version }} && ./bootstrap && gmake && gmake install
+#  ignore_errors: yes
+#  when: "'3.6.2' not in cmake_version_result.stdout"
+  
+  
+ # - command: my-app --status 
+ # register: myapp_result 
+#- command: do-something-to-my-app 
+#  when: "'ready' in myapp_result.stdout"
+
+
+#when: nginxVersion.stdout != 'nginx version: nginx/1.8.0'
+#or
+
+#when: '"nginx version: nginx/1.8.0" not in nginxVersion.stdout'
+  
+  
+- name: install | Ensure Mysql libs and devel packages are installed.
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+   - mysql-libs
+   - mysql-devel
+   - gcc
+   - gcc-c++
+   - bison
+   - openssl
+   - openssl-devel
+   - ncurses
+   - ncurses-devel
+   - make
+   - cmake3
+   - autoconf
+   - libaio-devel
+   - redhat-lsb-core
+
+- name: install | Create Mysql group.
+  group: name=mysql state=present
+
+- name: install | Create Mysql user.
+  user: name=mysql shell=/sbin/nologin group=mysql
+
+- block: 
+  - name: install | Copy Mysql source files to Server.
+    unarchive: src={{ mysql57_file_path }} dest=/tmp/ creates=/tmp/{{ mysql57_dirname }}
+
+  - name: install | Build configure script.
+    shell: "{{ mysql57_source_configure_command }}"
+    args:
+      chdir: "/tmp/{{ mysql57_dirname }}"
+      creates: "{{ mysql57_basedir }}/bin/mysql"
+     
+  - name: install | Make and install Mysql.
+    shell: "make -j {{ ansible_processor_vcpus | d(1) }} && make -j {{ ansible_processor_vcpus | d(1) }} install"
+    args:
+      chdir: "/tmp/{{ mysql57_dirname }}"
+      creates: "{{ mysql57_basedir }}/bin/mysql"
+  when: mysql57_install_from_source
+  
+- name: install | Copy Mysql bin files to Server.
+  unarchive: src={{ mysql57_file_path }} dest={{ software_install_path }} creates={{ mysql57_basedir }}/bin/mysql
+  when: not mysql57_install_from_source
+
+- name: install | Config environment variable.
+  lineinfile: dest=/etc/profile line='export PATH={{ mysql57_basedir }}/bin:$PATH'
